@@ -48,7 +48,7 @@ export default function OldSection({
     }
   }, [lastDocMessage]);
 
-  const finalMessages = finalMessageDisplay(documents, 'old');
+  const finalMessages = finalMessageDisplay(documents);
 
   const observer = useRef<IntersectionObserver>();
   const lastMessagelementRef = useCallback(
@@ -79,18 +79,7 @@ export default function OldSection({
             
             const referrence = (index === finalMessages.length - 1) ? lastMessagelementRef : null;
             return (
-              <ChatBubble
-                key={mes.id}
-                isOnline={true}
-                type="old"
-                textArray={mes.textArray}
-                photoURL={null}
-                displayName={mes.displayName}
-                createdAt={mes.lastMessageTime}
-                breakTime={mes.breakTime}
-                from={from}
-                referrence={referrence}
-              />
+              <></>
             );
           })
         : <></>}

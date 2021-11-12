@@ -8,11 +8,10 @@ import React, {
 } from "react";
 import { RoomContext } from "../../context/RoomProvider";
 import { finalMessageDisplay } from "../../firebase/services";
-import { Text } from "@chakra-ui/react";
-import useSendMessage from "../../hooks/useSendMessage";
+import { Spinner, VStack, Text } from "@chakra-ui/react";
 import ChatBubble from "./ChatBubble";
 import { AuthContext } from "../../context/AuthProvider";
-import OldSection from "./OldSection";
+import useGetMessage from "../../hooks/useGetMessage";
 
 export default function LiveSection({
   messageListRef,
@@ -26,6 +25,12 @@ export default function LiveSection({
     members
   } = useContext(RoomContext);
   const auth = useContext(AuthContext);
+  
+  useEffect(() => {
+    if (messageListRef?.current) {
+      messageListRef.current.scrollTop = 0;
+    }
+  }, []);
 
   const selectedRoomId = useMemo(
     () => selectedRoom.id,
@@ -33,24 +38,24 @@ export default function LiveSection({
   );
 
   const [indexLastLiveMessage, setIndexLastLiveMessage] = useState(null);
-
-  const liveMessages = useSendMessage(
-    "messages",
-    selectedRoomId,
-    indexLastLiveMessage
-  );
-
-  const finalLiveMessages = finalMessageDisplay(liveMessages);
+  const [lastDoc, setLastDoc] = useState(null);
 
   useEffect(() => {
-    if (messageListRef?.current) {
-      messageListRef.current.scrollTop = 0;
+    if (!lastDoc) {
+      setLastDoc(indexLastLiveMessage);
     }
-  }, []);
+  }, [indexLastLiveMessage]);
+
+  const { documents, hasMore, loading, oldestMessage } = useGetMessage(
+    selectedRoomId,
+    indexLastLiveMessage,
+    lastDoc
+  );
+
+  console.log('rerender')
 
   useEffect(() => {
     setFirstCallBack(false);
-    setIndexLastLiveMessage(null);
   }, [selectedRoom.id]);
 
   const observer = useRef<IntersectionObserver>();
@@ -58,33 +63,58 @@ export default function LiveSection({
     (node) => {
       if (observer.current) observer.current.disconnect();
       observer.current = new IntersectionObserver((entries) => {
-        const length = liveMessages.length;
+        const length = documents.length;
         if (entries[0].isIntersecting && length === 15) {
           setInputTrigger(false);
           setFirstCallBack(true);
-          setIndexLastLiveMessage(liveMessages[length - 1]);
+          setIndexLastLiveMessage(documents[length - 1]);
         }
       });
       if (node) observer.current.observe(node);
       if (firstCallBack && node) observer.current.unobserve(node);
     },
-    [liveMessages]
+    [documents]
   );
+  
+
+  const observerOld = useRef<IntersectionObserver>();
+  const lastOldMessagelementRef = useCallback(
+    (node) => {
+      if (observerOld.current) observerOld.current.disconnect();
+      observerOld.current = new IntersectionObserver((entries) => {
+        if (entries[0].isIntersecting && hasMore) {
+          setLastDoc(oldestMessage);
+        }
+      });
+      if (node) observerOld.current.observe(node);
+    },
+    [hasMore]
+  );
+
+  useEffect(() => {
+    if (!inputTrigger) {
+      setLastDoc(oldestMessage);
+    }
+  }, [observerOld.current, inputTrigger]);
+
+  const finalLiveMessages = finalMessageDisplay(documents)
 
   return (
     <>
       {finalLiveMessages.map((mes, index) => {
+        
         const from = mes.uid === auth.user.uid ? "me" : "others";
         const length = finalLiveMessages.length;
         const userPhotoURL = members.find(
           (user) => user.uid === mes.uid
         );
-        const referrence =
-          index === length - 1 ? lastLiveMessagelementRef : null;
+        const liveReferrence =
+          (mes.isLastLiveMessage) ? lastLiveMessagelementRef : null;
+        const oldReferrence =
+          (mes.isLastOldMessage) ? lastOldMessagelementRef : null;
         return (
           <ChatBubble
             key={mes.id}
-            type="live"
             textArray={mes.textArray}
             photoURL={userPhotoURL?.photoURL}
             isOnline={userPhotoURL?.isOnline}
@@ -92,7 +122,7 @@ export default function LiveSection({
             createdAt={mes.lastMessageTime}
             from={from}
             breakTime={mes.breakTime}
-            referrence={referrence}
+            referrence={liveReferrence || oldReferrence}
           />
         );
       })}
@@ -101,12 +131,11 @@ export default function LiveSection({
           Start the conversation
         </Text>
       )}
-      {
-        <OldSection
-          inputTrigger={inputTrigger}
-          indexLastLiveMessage={indexLastLiveMessage}
-        />
-      }
+      {loading && <VStack position="relative" >
+          <VStack position="absolute" style={{top: -12}}>
+          <Spinner />
+          </VStack>
+        </VStack>}
     </>
   );
 }

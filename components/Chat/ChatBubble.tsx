@@ -10,8 +10,7 @@ type Props = {
   displayName: any;
   createdAt: any;
   breakTime: any;
-  type: string;
-  isOnline: boolean
+  isOnline: boolean;
 };
 
 const ChatBubble = ({
@@ -22,8 +21,7 @@ const ChatBubble = ({
   displayName,
   createdAt,
   breakTime,
-  type,
-  isOnline
+  isOnline,
 }: Props) => {
   const isMe = from === "me";
   const bottomRightRadius = isMe ? 0 : 32;

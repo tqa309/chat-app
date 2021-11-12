@@ -14,15 +14,13 @@ export const addDocument = async (collection: string, data: object) => {
   return result;
 };
 
-export const finalMessageDisplay = (firstArray, type = "live") => {
+export const finalMessageDisplay = (firstArray) => {
   let mesArray = [...firstArray];
 
-  if (type === "live") {
     mesArray = mesArray.map((doc) => ({
       ...doc.data(),
       id: doc.id,
     }));
-  }
 
   let length = mesArray.length;
 
@@ -61,6 +59,11 @@ export const finalMessageDisplay = (firstArray, type = "live") => {
 
     if (i === length - 1) {
       finalMessage.breakTime = mesArray[i].createdAt;
+      if (length === 15) {
+        finalMessage.isLastLiveMessage = true;
+      } else {
+        finalMessage.isLastOldMessage = true;
+      }
     }
 
     finalMessage.textArray = textArray;
@@ -68,8 +71,6 @@ export const finalMessageDisplay = (firstArray, type = "live") => {
     result.push(finalMessage);
     textArray = [];
   }
-
-  console.log(result)
 
   return result;
 };

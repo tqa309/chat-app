@@ -1,15 +1,15 @@
-import Link from 'next/link'
-import Layout from '../components/Layout'
+import Chat from "../components/Chat";
+import RoomProvider from "../context/RoomProvider";
+import Main from "../layouts/Main";
 
-const IndexPage = () => (
-  <Layout title="Home | Next.js + TypeScript Example">
-    <h1>Hello Next.js 👋</h1>
-    <p>
-      <Link href="/about">
-        <a>About</a>
-      </Link>
-    </p>
-  </Layout>
-)
+const IndexPage = () => {
+  return (
+    <RoomProvider>
+      <Main title="Your rooms">
+        <Chat onChatHistoryOpen={() => {}} onChatFilesOpen={() => {}} />
+      </Main>
+    </RoomProvider>
+  );
+};  
 
-export default IndexPage
+export default IndexPage;

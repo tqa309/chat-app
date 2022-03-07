@@ -18,8 +18,8 @@ export const finalMessageDisplay = (firstArray) => {
   let mesArray = [...firstArray];
 
     mesArray = mesArray.map((doc) => ({
-      ...doc.data(),
-      id: doc.id,
+      ...doc?.data(),
+      id: doc?.id,
     }));
 
   let length = mesArray.length;

@@ -56,6 +56,8 @@ export default function LiveSection({
 
   useEffect(() => {
     setFirstCallBack(false);
+    setIndexLastLiveMessage(null);
+    setLastDoc(null)
   }, [selectedRoom.id]);
 
   const observer = useRef<IntersectionObserver>();

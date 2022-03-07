@@ -12,47 +12,45 @@ const useGetMessage = (
   const [hasMore, setHasMore] = useState(true);
   const [oldestMessage, setOldestMessage] = useState(null);
 
+
   useEffect(() => {
-    let collectionRef = db
+    let collectionRef 
+
+    if (indexLastLiveMessage) {
+      collectionRef = db
       .collection("messages")
       .orderBy("createdAt")
       .startAt(indexLastLiveMessage)
       .where("roomId", "==", selectedRoomId);
-
-    const unsubscribe = collectionRef.onSnapshot((snapshot) => {
-      const documents = snapshot.docs.map((doc) => {
-        return doc;
-      });
-
-      documents.slice(14,).reverse();
-
-      console.log(indexLastLiveMessage?.data())
-      setDocuments((prevDocs) => [...prevDocs, ...documents]);
-    });
-
-    return unsubscribe;
-  }, [indexLastLiveMessage]);
-
-  useEffect(() => {
-    console.log('selectedRoomId')
-    setHasMore(true);
-    setOldestMessage(null)
-    let collectionRef = db
+    } else {
+      collectionRef = db
       .collection("messages")
       .orderBy("createdAt", "desc")
-      .limit(limit)
+      .limit(15)
       .where("roomId", "==", selectedRoomId);
+    }
 
     const unsubscribe = collectionRef.onSnapshot((snapshot) => {
       const documents = snapshot.docs.map((doc) => {
         return doc;
       });
-      
-      setDocuments(documents);
+
+      if (indexLastLiveMessage) {
+        setDocuments(prev => {
+          const last = documents.length - 1;
+          if (documents[last]?.id != prev[0].id && prev.length >= 15) {
+            return [documents[last], ...prev]
+          }
+          return prev
+        });
+
+      } else {
+        setDocuments(documents);
+      }
     });
 
     return unsubscribe;
-  }, [selectedRoomId]);
+  }, [indexLastLiveMessage, selectedRoomId]);
 
   useEffect(() => {
     console.log('oldest')
